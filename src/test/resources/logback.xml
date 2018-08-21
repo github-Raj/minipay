@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<property resource="logback.properties"></property>
+	
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>%d{dd-MM-yy HH:mm:ss.SSS,UTC}\t%X{correlationId}\t%23thread\t%-5level\t%-38logger{36}\t%-25M\t%4line\t%msg%n</Pattern>
+		</encoder>
+	</appender>
+	
+	<appender name="ASYNC-STDOUT-APPENDER" class="ch.qos.logback.classic.AsyncAppender">
+		<discardingThreshold>0</discardingThreshold>
+		<includeCallerData>true</includeCallerData>
+		<queueSize>500</queueSize>
+		<appender-ref ref="STDOUT" />
+	</appender>
+
+	<appender name="WAVE-RELEASE-GRAPHITE-LOG-APPENDER"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+		<file>${LOG_DIR}/wave-release_graphite.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>%d{dd-MM-yy HH:mm:ss.SSS}\t%X{correlationId}\t%23thread\t%-5level\t%-38logger{36}\t%-25M\t%4line\t%msg%n</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${LOG_DIR}\wave-release_graphite.log.%d{yyyy-MM-dd}.%i</fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy	class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>10MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+		</rollingPolicy>
+	</appender>
+
+   <logger name="com.walmart" level="${LOG_LEVEL}" additivity="false">
+      <appender-ref ref="ASYNC-STDOUT-APPENDER"/>
+   </logger>
+
+	<logger name="com.codahale" level="${LIB_LOG_LEVEL}" additivity="false">
+		<appender-ref ref="WAVE-RELEASE-GRAPHITE-LOG-APPENDER" />
+	</logger>
+
+	<root level="${ROOT_LOG_LEVEL}">
+		<appender-ref ref="ASYNC-STDOUT-APPENDER" />
+	</root>
+	
+	<!-- this is added to print jdbc queries and named parameters-->
+	
+	<logger name="org.springframework.jdbc.core.JdbcTemplate" level="${ROOT_LOG_LEVEL}" additivity="false">
+		<appender-ref ref="ASYNC-STDOUT-APPENDER"/>
+	</logger>
+
+	<logger name="org.springframework.jdbc.core.StatementCreatorUtils" level="${ROOT_LOG_LEVEL}" additivity="false">
+		<appender-ref ref="ASYNC-STDOUT-APPENDER"/>
+	</logger>
+
+</configuration>
